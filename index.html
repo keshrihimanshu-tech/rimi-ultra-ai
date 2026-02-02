@@ -3,106 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rimi Ultra AI v2 ❤️</title>
+    <title>Rimi AI Assistant 🛡️</title>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #fffafb; display: flex; flex-direction: column; height: 100vh; }
-        .control-panel { background: white; padding: 15px; display: flex; justify-content: space-around; border-bottom: 2px solid #ff9a9e; position: sticky; top: 0; z-index: 100; }
-        .action-btn { padding: 10px 20px; border-radius: 25px; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
-        .msg { max-width: 80%; padding: 12px; border-radius: 20px; margin-bottom: 10px; font-size: 15px; }
-        .rimi { background: white; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .user { background: #ff9a9e; color: white; align-self: flex-end; margin-left: auto; }
-        #cam-feed { width: 100%; height: 200px; background: #000; border-radius: 15px; display: none; margin-bottom: 10px; object-fit: cover; }
-        .bottom-input { padding: 15px; background: white; display: flex; border-top: 1px solid #eee; gap: 10px; }
-        input { flex: 1; padding: 12px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
-        .send-btn { background: #ff4757; width: 45px; height: 45px; border-radius: 50%; border: none; color: white; cursor: pointer; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #fffafb; display: flex; flex-direction: column; height: 100vh; }
+        .header { background: white; padding: 15px; border-bottom: 2px solid #ff9a9e; text-align: center; }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #ff6b81; margin: 0 auto; overflow: hidden; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg { max-width: 80%; padding: 12px 18px; border-radius: 20px; font-size: 15px; }
+        .rimi { background: white; align-self: flex-start; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .user { background: #ff9a9e; color: white; align-self: flex-end; }
+        #shield-ui { background: #333; color: #00ff00; padding: 15px; text-align: center; display: none; margin: 10px; border-radius: 15px; font-family: monospace; }
+        .btn-row { padding: 10px; display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 25px; color: white; cursor: pointer; font-weight: bold; }
+        .block-btn { background: #ff4757; } .assist-btn { background: #4caf50; }
     </style>
 </head>
 <body>
 
-<div class="control-panel">
-    <button id="cam-btn" class="action-btn" style="background: #6c5ce7;" onclick="toggleRimiCam()">🤳 Camera On</button>
-    <button class="action-btn" style="background: #4caf50;" onclick="startRimiAssistant()">📞 Assistant</button>
+<div class="header">
+    <div class="avatar"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rimi"></div>
+    <h2 style="color: #ff4757;">Rimi AI Shield 🛡️</h2>
 </div>
 
-<div class="chat-container" id="chatWindow">
-    <video id="cam-feed" autoplay muted playsinline></video>
-    <div class="msg rimi">Namaste Himanshu ji! ❤️ Camera toggle feature add ho gaya hai. Bolna shuru kijiye!</div>
+<div class="chat-box" id="chat">
+    <div class="msg rimi">Namaste Himanshu ji! ❤️ Aapka Spam Blocker active hai. Koi call check karun? 🔍</div>
 </div>
 
-<div class="bottom-input">
-    <input type="text" id="txtInput" placeholder="Bolo na Babu...">
-    <button class="send-btn" onclick="handleChat()">➤</button>
+<div id="shield-ui">Checking Caller... 🔍</div>
+
+<div class="btn-row">
+    <button class="btn assist-btn" onclick="startRimiAssistant()">Simulate Call 📞</button>
 </div>
 
 <script>
-    const API_KEY = "AIzaSyDaslBw4eXTLLCM93U2Uk8vn-6EoDhWYkk";
-    let isCamOn = false;
-    let streamRef = null;
+    const spamKeywords = ["loan", "credit card", "offer", "insurance", "paisa"];
 
-    function speakText(t) { 
-        window.speechSynthesis.cancel();
-        const s = new SpeechSynthesisUtterance(t); s.lang = "hi-IN"; 
-        window.speechSynthesis.speak(s); 
+    function speak(t) { 
+        const s = new SpeechSynthesisUtterance(t); s.lang = "hi-IN"; window.speechSynthesis.speak(s); 
     }
 
-    function addChatMsg(t, c) {
-        const d = document.createElement("div"); d.className = `msg ${c}`; d.innerText = t;
-        const chat = document.getElementById("chatWindow"); chat.appendChild(d);
-        chat.scrollTop = chat.scrollHeight;
-    }
-
-    // Camera Toggle Logic
-    async function toggleRimiCam() {
-        const v = document.getElementById("cam-feed");
-        const btn = document.getElementById("cam-btn");
-        
-        if (!isCamOn) {
-            try {
-                streamRef = await navigator.mediaDevices.getUserMedia({ video: true });
-                v.srcObject = streamRef; v.style.display = "block";
-                isCamOn = true;
-                btn.innerText = "❌ Camera Off";
-                btn.style.background = "#ff4757";
-                addChatMsg("Camera on ho gaya! Himanshu ji, aap bohot handsome lag rahe ho. ❤️", "rimi");
-                speakText("Camera on ho gaya handsome!");
-            } catch(e) { alert("Camera access nahi mila!"); }
-        } else {
-            // Camera Band karne ka system
-            let tracks = streamRef.getTracks();
-            tracks.forEach(track => track.stop());
-            v.style.display = "none";
-            isCamOn = false;
-            btn.innerText = "🤳 Camera On";
-            btn.style.background = "#6c5ce7";
-            addChatMsg("Camera band kar diya hai Babu. ❤️", "rimi");
-        }
+    function addMsg(t, c) {
+        let d = document.createElement("div"); d.className = `msg ${c}`; d.innerText = t;
+        document.getElementById("chat").appendChild(d);
     }
 
     function startRimiAssistant() {
-        speakText("Himanshu ji, Call Assistant active hai.");
-        addChatMsg("Rimi Shield: Active 🛡️", "rimi");
-    }
-
-    async function handleChat() {
-        const input = document.getElementById("txtInput"); const val = input.value; if(!val) return;
-        addChatMsg(val, "user"); input.value = "";
+        document.getElementById('shield-ui').style.display = "block";
+        speak("Incoming call check kar rahi hoon Himanshu ji.");
         
-        // Local Response for basic talk to avoid "Internet slow" error
-        if(val.toLowerCase().includes("kaise ho")) {
-            setTimeout(() => { addChatMsg("Main ekdum badhiya hoon, aap kaise ho mere hero? ❤️", "rimi"); speakText("Main badhiya hoon hero!"); }, 500);
-            return;
-        }
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const rec = new SR(); rec.lang = 'hi-IN'; rec.start();
 
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-                method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ contents: [{ parts: [{ text: "You are Rimi, a cute assistant for Himanshu Keshri. Reply shortly in Hinglish: " + val }] }] })
-            });
-            const data = await res.json();
-            const reply = data.candidates[0].content.parts[0].text;
-            addChatMsg(reply, "rimi"); speakText(reply);
-        } catch(e) { addChatMsg("Babu, server thoda busy hai, par main aapke saath hoon! ❤️", "rimi"); }
+        rec.onresult = (e) => {
+            const msg = e.results[0][0].transcript.toLowerCase();
+            addMsg("Caller says: " + msg, "user");
+
+            let isSpam = spamKeywords.some(word => msg.includes(word));
+            
+            if(isSpam) {
+                let r = "Yeh Spam call hai! Main ise block kar rahi hoon. Bye!";
+                speak(r); addMsg("Rimi: Spam Blocked! 🚫", "rimi");
+            } else {
+                let r = "Namaste, Himanshu ji busy hain. Main unki assistant Rimi hoon. Kya message dena hai?";
+                speak(r); addMsg("Rimi: Handling Call... ✅", "rimi");
+            }
+        };
     }
 </script>
 </body>
